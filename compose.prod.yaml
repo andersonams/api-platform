@@ -1,18 +1,22 @@
 # Production environment override
+# Usage: docker compose -f compose.yaml -f compose.prod.yaml up -d
 services:
   php:
-    build:
-      context: ./api
-      target: frankenphp_prod
+    image: andersonmouradev/api-php:${APP_VERSION:-latest}
     environment:
+      SERVER_NAME: ${SERVER_NAME:-:80}
       APP_SECRET: ${APP_SECRET}
       MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET}
       MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET}
+      MERCURE_PUBLIC_URL: ${CADDY_MERCURE_PUBLIC_URL:-http://${SERVER_NAME:-localhost}/.well-known/mercure}
+    healthcheck:
+      test: curl --fail http://localhost/docs || exit 1
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
   pwa:
-    build:
-      context: ./pwa
-      target: prod
+    image: andersonmouradev/api-pwa:${APP_VERSION:-latest}
 
   database:
     environment:
